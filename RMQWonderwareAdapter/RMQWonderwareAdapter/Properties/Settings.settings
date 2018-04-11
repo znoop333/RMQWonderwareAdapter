@@ -1,0 +1,33 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="RMQWonderwareAdapter.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="PC_ID" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">W1</Value>
+    </Setting>
+    <Setting Name="RMQHostName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">rmq-balancer.ommc.com</Value>
+    </Setting>
+    <Setting Name="RMQPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5677</Value>
+    </Setting>
+    <Setting Name="RMQUserName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">RMQWonderwareAdapter</Value>
+    </Setting>
+    <Setting Name="RMQPassword" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">RMQWonderwareAdapter</Value>
+    </Setting>
+    <Setting Name="RMQVirtualHost" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">/</Value>
+    </Setting>
+    <Setting Name="RMQInboundExchangeName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">program.logging</Value>
+    </Setting>
+    <Setting Name="RMQOutboundExchangeName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">program.activity</Value>
+    </Setting>
+    <Setting Name="LOG_PATH" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">LOG</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
