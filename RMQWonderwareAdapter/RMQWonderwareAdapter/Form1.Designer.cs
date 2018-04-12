@@ -42,6 +42,8 @@
             this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addSubscriptionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeAllSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.tableLayoutPanelMain.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -150,7 +152,9 @@
             // 
             this.diagnosticsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showSubscriptionsToolStripMenuItem,
-            this.addSubscriptionToolStripMenuItem});
+            this.addSubscriptionToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.removeAllSubscriptionsToolStripMenuItem});
             this.diagnosticsToolStripMenuItem.Name = "diagnosticsToolStripMenuItem";
             this.diagnosticsToolStripMenuItem.Size = new System.Drawing.Size(80, 20);
             this.diagnosticsToolStripMenuItem.Text = "&Diagnostics";
@@ -168,6 +172,18 @@
             this.addSubscriptionToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
             this.addSubscriptionToolStripMenuItem.Text = "&Add Subscription";
             this.addSubscriptionToolStripMenuItem.Click += new System.EventHandler(this.addSubscriptionToolStripMenuItem_Click);
+            // 
+            // removeAllSubscriptionsToolStripMenuItem
+            // 
+            this.removeAllSubscriptionsToolStripMenuItem.Name = "removeAllSubscriptionsToolStripMenuItem";
+            this.removeAllSubscriptionsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.removeAllSubscriptionsToolStripMenuItem.Text = "&Remove all subscriptions";
+            this.removeAllSubscriptionsToolStripMenuItem.Click += new System.EventHandler(this.removeAllSubscriptionsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(202, 6);
             // 
             // Form1
             // 
@@ -205,6 +221,8 @@
         private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSubscriptionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addSubscriptionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem removeAllSubscriptionsToolStripMenuItem;
     }
 }
 

@@ -97,6 +97,11 @@ namespace RMQWonderwareAdapter
             return Advise(strItemName, true, CorrelationId);
         }
 
+        public WWMxItem GetLastValue(string strItemName, string CorrelationId)
+        {
+            return LookupItem(strItemName);
+        }
+
         public bool Write(string strItemName, object Value, string CorrelationId)
         {
             if(!Advise(strItemName, false, CorrelationId))
@@ -237,6 +242,9 @@ namespace RMQWonderwareAdapter
 
         private WWMxItem LookupItem(string strItemName)
         {
+            if (RegisteredItems == null)
+                return null;
+
             foreach (var item in RegisteredItems)
             {
                 if (item.Value.ItemName == strItemName)
@@ -312,13 +320,20 @@ namespace RMQWonderwareAdapter
             try
             {
                 if (i.hItem == 0)
+                {
+                    PostLogMessage("Failed to advise: " + strItemName + " - no hItem");
                     return false;
+                }
 
                 if (!i.OnAdvise)
                 {
                     LMX_Server.Advise(hLMX, i.hItem);
                     i.OnAdvise = true;
                     PostLogMessage("Item On Advise: " + strItemName);
+                }
+                else
+                {
+                    PostLogMessage("Already advised " + strItemName);
                 }
 
                 return true;
@@ -331,7 +346,7 @@ namespace RMQWonderwareAdapter
             return false;
         }
 
-        private void UnAdviseAll()
+        public void UnAdviseAll()
         {
             try
             {
@@ -372,6 +387,8 @@ namespace RMQWonderwareAdapter
 
         private bool UnAdvise(string strItemName, string CorrelationId)
         {
+            PostLogMessage("UnAdvising " + strItemName);
+
             WWMxItem i = LookupItem(strItemName);
             if (i == null)
             {
@@ -398,6 +415,8 @@ namespace RMQWonderwareAdapter
 
         private bool RemoveItem(string strItemName)
         {
+            PostLogMessage("Removing " + strItemName);
+
             WWMxItem i = LookupItem(strItemName);
             if (i == null || !i.Added)
             {
@@ -423,7 +442,7 @@ namespace RMQWonderwareAdapter
             return false;
         }
 
-        private void RemoveAll()
+        public void RemoveAll()
         {
             // first, ensure all items are unadvised
             UnAdviseAll();

@@ -27,6 +27,6 @@ namespace RMQWonderwareAdapter
         public Boolean Once { get; set; }
         public string CorrelationId { get; set; }
         public String Timestamp { get; set; }
-
+        public String DataType { get; set; }
     }
 }

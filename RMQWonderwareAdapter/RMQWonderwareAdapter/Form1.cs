@@ -116,17 +116,35 @@ namespace RMQWonderwareAdapter
             s = "Received JSON: " + e.OriginalMessageString;
             LogToGUI(s);
             Win32Helper.LogHelper.AppendToLogfile(FilenameForLog("JSON"), s);
+            bool b;
 
             switch (ParsedMessage.Command)
             {
                 case "SUBSCRIBE":
-                    WWMgr.Subscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    b = WWMgr.Subscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    if(b)
+                    {
+                        LogToGUI("Subscribed to " + ParsedMessage.TagName);
+                    }
+                    else
+                    {
+                        LogToGUI("FAILED to subscribed to " + ParsedMessage.TagName);
+                    }
+
                     break;
                 case "UNSUBSCRIBE":
                     WWMgr.Unsubscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
                     break;
                 case "READ":
-                    WWMgr.ReadOnce(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    var i = WWMgr.GetLastValue(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    if (i != null)
+                    {
+                        LogToGUI("GetLastValue for " + ParsedMessage.TagName );
+                        SendResponse(i);
+                    }
+                    else
+                        LogToGUI("Item " + ParsedMessage.TagName + " not advised");
+                    //WWMgr.ReadOnce(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
                     break;
                 case "WRITE":
                     WWMgr.Write(ParsedMessage.TagName, ParsedMessage.Value, e.Message.BasicProperties.CorrelationId);
@@ -136,6 +154,26 @@ namespace RMQWonderwareAdapter
                     break;
             }
 
+        }
+
+        private void SendResponse(WWMxItem i)
+        {
+            RmqResponseMessage m1 = new RmqResponseMessage();
+            if (m1 == null)
+            {
+                LogToGUI("new RmqResponseMessage failed??");
+                return;
+            }
+
+            m1.Command = "LastValue";
+            m1.TagName = i.ItemName;
+            m1.Value = i.LastValue.ToString();
+            m1.CorrelationId = i.CorrelationId;
+            m1.Timestamp = i.LastTimestamp;
+            m1.DataType = i.LastValue.GetType().Name;
+
+            string key = i.ItemName, Message = JsonConvert.SerializeObject(m1);
+            rmq.PutMessage(key, Message);
         }
 
         private void LogToGUI(string s)
@@ -166,6 +204,7 @@ namespace RMQWonderwareAdapter
             m.Value = e.LastValue.ToString();
             m.CorrelationId = e.CorrelationId;
             m.Timestamp = e.LastTimestamp;
+            m.DataType = e.LastValue.GetType().Name;
 
             string key = e.ItemName, Message = JsonConvert.SerializeObject(m);
             rmq.PutMessage(key, Message);
@@ -191,6 +230,10 @@ namespace RMQWonderwareAdapter
 
             LogHelper.AppendToLogfile(fn, "Unregister");
             LogHelper.FlushLogFiles();
+            LogHelper.CloseLogFiles();
+
+            await Task.Delay(15000);
+            Environment.Exit(0);
 
             // is channel.BasicCancel() causing a hang here? see https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
             await rmq.Unsubscribe();
@@ -217,9 +260,12 @@ namespace RMQWonderwareAdapter
             LogHelper.CloseLogFiles();
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
+
+            await Task.Delay(15000);
+            Environment.Exit(0);
         }
 
         private void showSubscriptionsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -250,6 +296,13 @@ namespace RMQWonderwareAdapter
                     WWMgr.Subscribe(s, null);
                 }
             }
+        }
+
+        private void removeAllSubscriptionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LogToGUI("Removing All Subscriptions...");
+            WWMgr.RemoveAll();
+            LogToGUI("Remove All Subscriptions done");
         }
     }
 }
