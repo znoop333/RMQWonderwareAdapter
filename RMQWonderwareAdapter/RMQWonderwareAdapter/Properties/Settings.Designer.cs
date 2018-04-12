@@ -79,7 +79,7 @@ namespace RMQWonderwareAdapter.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("program.logging")]
+        [global::System.Configuration.DefaultSettingValueAttribute("plctags_in")]
         public string RMQInboundExchangeName {
             get {
                 return ((string)(this["RMQInboundExchangeName"]));
@@ -88,7 +88,7 @@ namespace RMQWonderwareAdapter.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("program.activity")]
+        [global::System.Configuration.DefaultSettingValueAttribute("plctags_out")]
         public string RMQOutboundExchangeName {
             get {
                 return ((string)(this["RMQOutboundExchangeName"]));

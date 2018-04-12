@@ -21,10 +21,10 @@
       <Value Profile="(Default)">/</Value>
     </Setting>
     <Setting Name="RMQInboundExchangeName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">program.logging</Value>
+      <Value Profile="(Default)">plctags_in</Value>
     </Setting>
     <Setting Name="RMQOutboundExchangeName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">program.activity</Value>
+      <Value Profile="(Default)">plctags_out</Value>
     </Setting>
     <Setting Name="LOG_PATH" Type="System.String" Scope="Application">
       <Value Profile="(Default)">LOG</Value>

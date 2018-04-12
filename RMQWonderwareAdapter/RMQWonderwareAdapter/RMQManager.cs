@@ -67,11 +67,12 @@ namespace RMQWonderwareAdapter
                 if (channel != null)
                     CreateFabric();
 
+                PostLogMessage("Connected to " + HostName);
                 return true;
             }
             catch (RabbitMQ.Client.Exceptions.BrokerUnreachableException ex)
             {
-                Console.Write(ex.ToString());
+                PostLogMessage(ex.ToString());
                 return false;
             }
 
@@ -90,11 +91,12 @@ namespace RMQWonderwareAdapter
                         conn.Close();
                 });
 
+                PostLogMessage("Disconnected from " + HostName);
                 return true;
             }
             catch (RabbitMQ.Client.Exceptions.BrokerUnreachableException ex)
             {
-                Console.Write(ex.ToString());
+                PostLogMessage(ex.ToString());
                 return false;
             }
         }
@@ -125,7 +127,7 @@ namespace RMQWonderwareAdapter
             }
             catch (Exception ex)
             {
-                Console.Write(ex.ToString());
+                PostLogMessage(ex.ToString());
             }
 
             return false;
@@ -138,21 +140,24 @@ namespace RMQWonderwareAdapter
 
             try
             {
+                PostLogMessage("Unsubscribing " + consumerTag);
+                await Task.Yield();
                 await Task.Run(() =>
                 {
                     if (channel != null)
                         channel.BasicCancel(consumerTag);
                     consumerTag = null;
                 });
+                PostLogMessage("Unsubscribed " + HostName);
                 return true;
             }
             catch (AlreadyClosedException ex)
             {
-                Console.Write(ex.ToString());
+                PostLogMessage(ex.ToString());
             }
             catch (System.TimeoutException tex)
             {
-                Console.Write(tex.ToString());
+                PostLogMessage(tex.ToString());
             }
 
             return false;
@@ -177,6 +182,7 @@ namespace RMQWonderwareAdapter
 
             channel.ExchangeDeclare(exchange: OutboundExchangeName, type: "topic", durable: true, autoDelete: false);
 
+            PostLogMessage("CreateFabric finished for " + InboundExchangeName + " on queue " + InboundQueueName + " and " + OutboundExchangeName );
         }
 
         public bool Subscribe()
@@ -190,17 +196,24 @@ namespace RMQWonderwareAdapter
                     consumerTag = channel.BasicConsume(queue: InboundQueueName,
                                      autoAck: true,
                                      consumer: consumer);
+                PostLogMessage("Subscribed to queue " + InboundQueueName );
                 return consumerTag != null;
             }
             catch (RabbitMQ.Client.Exceptions.OperationInterruptedException rex)
             {
-                Console.Write(rex.ToString());
+                PostLogMessage(rex.ToString());
                 consumer.Received -= Consumer_Received;
                 return false;
             }
 
         }
 
+
+        public event EventHandler<String> LogMessage;
+        private void PostLogMessage(string s)
+        {
+            LogMessage?.Invoke(this, s);
+        }
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using RMQWonderwareAdapter.Properties;
+﻿using Newtonsoft.Json;
+using RMQWonderwareAdapter.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -39,7 +40,7 @@ namespace RMQWonderwareAdapter
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private async void Form1_Load(object sender, EventArgs e)
         {
             _syncContext = WindowsFormsSynchronizationContext.Current;
             PC_ID = Settings.Default.PC_ID;
@@ -56,12 +57,98 @@ namespace RMQWonderwareAdapter
             rmq.OutboundExchangeName = Settings.Default.RMQOutboundExchangeName;
             rmq.PC_ID = Settings.Default.PC_ID;
 
+            rmq.MessageArrived += Rmq_MessageArrived;
+            rmq.LogMessage += Rmq_LogMessage;
+
+            bool connected = await rmq.Connect();
+            if (connected)
+            {
+                if (!rmq.Subscribe())
+                    LogToGUI("Failed to Subscribe!");
+            }
+            else
+                LogToGUI("Failed to Connect!");
+
             WWMgr = new WWMxAccessManager();
             WWMgr.LogMessage += WWMgr_LogMessage;
             WWMgr.DataChange += WWMgr_DataChange;
             WWMgr.WriteCompleted += WWMgr_WriteCompleted;
 
             WWMgr.Register();
+        }
+
+        private void Rmq_LogMessage(object sender, string e)
+        {
+            _syncContext.Post(
+                        delegate
+                        {
+                            Console.WriteLine(e);
+                            LogToGUI(e);
+                        }, null);
+        }
+
+        private void Rmq_MessageArrived(object sender, RMQManager.EventArgsMessageArrived e)
+        {
+            _syncContext.Post(
+                        delegate
+                        {
+                            Console.WriteLine(e.ToString());
+                            HandleMessage(sender, e);
+                        }, null);
+        }
+
+        private void HandleMessage(object sender, RMQManager.EventArgsMessageArrived e)
+        {
+            string s;
+            RmqCommandMessage ParsedMessage;
+            try
+            {
+                ParsedMessage = JsonConvert.DeserializeObject<RmqCommandMessage>(e.OriginalMessageString);
+            }
+            catch (JsonReaderException jre)
+            {
+                s = "JSON parsing error! " + jre.ToString();
+                LogToGUI(s);
+                Win32Helper.LogHelper.AppendToLogfile(FilenameForLog("JSON"), s);
+                return;
+            }
+
+            s = "Received JSON: " + e.OriginalMessageString;
+            LogToGUI(s);
+            Win32Helper.LogHelper.AppendToLogfile(FilenameForLog("JSON"), s);
+
+            switch (ParsedMessage.Command)
+            {
+                case "SUBSCRIBE":
+                    WWMgr.Subscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    break;
+                case "UNSUBSCRIBE":
+                    WWMgr.Unsubscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    break;
+                case "READ":
+                    WWMgr.ReadOnce(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    break;
+                case "WRITE":
+                    WWMgr.Write(ParsedMessage.TagName, ParsedMessage.Value, e.Message.BasicProperties.CorrelationId);
+                    break;
+                default:
+                    LogToGUI("Unknown command " + ParsedMessage.Command);
+                    break;
+            }
+
+        }
+
+        private void LogToGUI(string s)
+        {
+            if (textBoxLog.Created && !textBoxLog.IsDisposed)
+                LogHelper.AppendToTextbox(textBoxLog, s);
+
+            LogHelper.AppendToLogfile(FilenameForLog("main"), s);
+        }
+
+        public static string FilenameForLog(string filename)
+        {
+            return String.Format("{0}\\{1}\\{2}-{3}.log", Application.StartupPath, Settings.Default.LOG_PATH, filename, DateTime.Now.ToString("yyyyMMdd"));
         }
 
         private void WWMgr_WriteCompleted(object sender, WWMxWriteItemInfo e)
@@ -72,6 +159,16 @@ namespace RMQWonderwareAdapter
         private void WWMgr_DataChange(object sender, WWMxItem e)
         {
             WWMgr_LogMessage(sender, e.ItemName + " was changed to " + e.LastValue);
+
+            RmqResponseMessage m = new RmqResponseMessage();
+            m.Command = "DataChange";
+            m.TagName = e.ItemName;
+            m.Value = e.LastValue.ToString();
+            m.CorrelationId = e.CorrelationId;
+            m.Timestamp = e.LastTimestamp;
+
+            string key = e.ItemName, Message = JsonConvert.SerializeObject(m);
+            rmq.PutMessage(key, Message);
         }
 
         private void WWMgr_LogMessage(object sender, string e)
@@ -79,20 +176,27 @@ namespace RMQWonderwareAdapter
             _syncContext.Post(
                         delegate
                         {
-                            if (textBoxLog.Created && !textBoxLog.IsDisposed)
-                                LogHelper.AppendToTextbox(textBoxLog, e);
-
-                            LogHelper.AppendToLogfile("main.txt", e);
+                            Console.WriteLine(e);
+                            LogToGUI(e);
                         }, null);
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            LogHelper.AppendToLogfile("main.txt", "Form1_FormClosing");
+            var fn = FilenameForLog("main");
+            LogHelper.AppendToLogfile(fn, "Form1_FormClosing");
+            LogHelper.FlushLogFiles();
 
             WWMgr.Unregister();
 
-            LogHelper.AppendToLogfile("main.txt", "Unregister");
+            LogHelper.AppendToLogfile(fn, "Unregister");
+            LogHelper.FlushLogFiles();
+
+            // is channel.BasicCancel() causing a hang here? see https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
+            await rmq.Unsubscribe();
+            await rmq.Disconnect();
+
+            LogHelper.AppendToLogfile(fn, "RMQ exited");
 
             LogHelper.FlushLogFiles();
             LogHelper.CloseLogFiles();
@@ -113,22 +217,39 @@ namespace RMQWonderwareAdapter
             LogHelper.CloseLogFiles();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            WWMgr.Subscribe("DDESuite_CLX.MLeak.PSteering_OK");
-            WWMgr.Subscribe("DDESuite_CLX.MLamp.M2Start");
-            WWMgr.Subscribe("DDESuite_CLX.MLamp.M2Start_VTL_H");
-            WWMgr.Subscribe("DDESuite_CLX.MTqPoint.M1_TQ06A");
-            WWMgr.Subscribe("DDESuite_CLX.MTqPoint.M1_TQ06L");
-            
+            Application.Exit();
         }
 
-        bool debugVal = false;
-        private void button2_Click(object sender, EventArgs e)
+        private void showSubscriptionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            LogToGUI("GetSubScriptions:");
 
-            WWMgr.Write("DEBUG.HORN", false);
+            var L = WWMgr.GetSubScriptions();
+            foreach (var i in L)
+            {
+                LogToGUI(String.Format("Tag {0}, handle {1}, Last Value {2}, timestamp {3}, quality {4}", i.ItemName, i.hItem, i.LastValue, i.LastTimestamp, i.LastQuality));
+            }
 
+            if (L.Count == 0)
+                LogToGUI("No subscriptions are advised");
+        }
+
+        private void addSubscriptionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var inputDlg = new FormInputSubscription())
+            {
+                if (inputDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                var s = inputDlg.textBoxInput.Text;
+                if (s.Length > 0)
+                {
+                    LogToGUI("Subscribing PLC tag " + s);
+                    WWMgr.Subscribe(s, null);
+                }
+            }
         }
     }
 }

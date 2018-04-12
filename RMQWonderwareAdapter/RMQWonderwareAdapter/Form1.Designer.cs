@@ -36,9 +36,14 @@
             this.timerFlushTextboxes = new System.Windows.Forms.Timer(this.components);
             this.timerFlushLogs = new System.Windows.Forms.Timer(this.components);
             this.timerCloseLogFiles = new System.Windows.Forms.Timer(this.components);
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addSubscriptionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanelMain.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanelMain
@@ -50,16 +55,14 @@
             this.tableLayoutPanelMain.Controls.Add(this.textBoxLog, 0, 1);
             this.tableLayoutPanelMain.Controls.Add(this.labelStatus, 0, 2);
             this.tableLayoutPanelMain.Controls.Add(this.labelTitle, 1, 0);
-            this.tableLayoutPanelMain.Controls.Add(this.button1, 2, 0);
-            this.tableLayoutPanelMain.Controls.Add(this.button2, 0, 0);
             this.tableLayoutPanelMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanelMain.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanelMain.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanelMain.Name = "tableLayoutPanelMain";
             this.tableLayoutPanelMain.RowCount = 3;
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 70F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanelMain.Size = new System.Drawing.Size(1040, 367);
+            this.tableLayoutPanelMain.Size = new System.Drawing.Size(1040, 343);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
             // textBoxLog
@@ -67,11 +70,11 @@
             this.tableLayoutPanelMain.SetColumnSpan(this.textBoxLog, 3);
             this.textBoxLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBoxLog.Font = new System.Drawing.Font("Verdana", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxLog.Location = new System.Drawing.Point(3, 76);
+            this.textBoxLog.Location = new System.Drawing.Point(3, 71);
             this.textBoxLog.Multiline = true;
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxLog.Size = new System.Drawing.Size(1034, 250);
+            this.textBoxLog.Size = new System.Drawing.Size(1034, 234);
             this.textBoxLog.TabIndex = 0;
             // 
             // labelStatus
@@ -80,9 +83,9 @@
             this.tableLayoutPanelMain.SetColumnSpan(this.labelStatus, 3);
             this.labelStatus.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelStatus.Font = new System.Drawing.Font("Verdana", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelStatus.Location = new System.Drawing.Point(3, 329);
+            this.labelStatus.Location = new System.Drawing.Point(3, 308);
             this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(1034, 38);
+            this.labelStatus.Size = new System.Drawing.Size(1034, 35);
             this.labelStatus.TabIndex = 1;
             this.labelStatus.Text = "Status: OK";
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -94,9 +97,9 @@
             this.labelTitle.Font = new System.Drawing.Font("Verdana", 27.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelTitle.Location = new System.Drawing.Point(211, 0);
             this.labelTitle.Name = "labelTitle";
-            this.labelTitle.Size = new System.Drawing.Size(618, 73);
+            this.labelTitle.Size = new System.Drawing.Size(618, 68);
             this.labelTitle.TabIndex = 2;
-            this.labelTitle.Text = "RMQ Wonderware Adaptor";
+            this.labelTitle.Text = "RMQ Wonderware Adapter";
             this.labelTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // timerFlushTextboxes
@@ -117,25 +120,54 @@
             this.timerCloseLogFiles.Interval = 86400000;
             this.timerCloseLogFiles.Tick += new System.EventHandler(this.timerCloseLogFiles_Tick);
             // 
-            // button1
+            // menuStrip1
             // 
-            this.button1.Location = new System.Drawing.Point(835, 3);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "TestRead";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem,
+            this.diagnosticsToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1040, 24);
+            this.menuStrip1.TabIndex = 1;
+            this.menuStrip1.Text = "menuStrip1";
             // 
-            // button2
+            // fileToolStripMenuItem
             // 
-            this.button2.Location = new System.Drawing.Point(3, 3);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 4;
-            this.button2.Text = "TestWrite";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exitToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Text = "&File";
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Text = "E&xit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // diagnosticsToolStripMenuItem
+            // 
+            this.diagnosticsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showSubscriptionsToolStripMenuItem,
+            this.addSubscriptionToolStripMenuItem});
+            this.diagnosticsToolStripMenuItem.Name = "diagnosticsToolStripMenuItem";
+            this.diagnosticsToolStripMenuItem.Size = new System.Drawing.Size(80, 20);
+            this.diagnosticsToolStripMenuItem.Text = "&Diagnostics";
+            // 
+            // showSubscriptionsToolStripMenuItem
+            // 
+            this.showSubscriptionsToolStripMenuItem.Name = "showSubscriptionsToolStripMenuItem";
+            this.showSubscriptionsToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.showSubscriptionsToolStripMenuItem.Text = "Show &Subscriptions";
+            this.showSubscriptionsToolStripMenuItem.Click += new System.EventHandler(this.showSubscriptionsToolStripMenuItem_Click);
+            // 
+            // addSubscriptionToolStripMenuItem
+            // 
+            this.addSubscriptionToolStripMenuItem.Name = "addSubscriptionToolStripMenuItem";
+            this.addSubscriptionToolStripMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.addSubscriptionToolStripMenuItem.Text = "&Add Subscription";
+            this.addSubscriptionToolStripMenuItem.Click += new System.EventHandler(this.addSubscriptionToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -143,13 +175,18 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1040, 367);
             this.Controls.Add(this.tableLayoutPanelMain);
+            this.Controls.Add(this.menuStrip1);
+            this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "RMQ Wonderware Adapter - converts RabbitMQ messages into PLC tags";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tableLayoutPanelMain.ResumeLayout(false);
             this.tableLayoutPanelMain.PerformLayout();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -162,8 +199,12 @@
         private System.Windows.Forms.Label labelTitle;
         private System.Windows.Forms.Timer timerFlushLogs;
         private System.Windows.Forms.Timer timerCloseLogFiles;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showSubscriptionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addSubscriptionToolStripMenuItem;
     }
 }
 

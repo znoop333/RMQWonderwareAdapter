@@ -23,6 +23,7 @@ namespace RMQWonderwareAdapter
         public bool OnAdvise { get; set; }
         public bool ReadOnlyOnce { get; set; } // unadvise as soon as first read is done (but keep it if Writing is true)
         public bool Writing { get; set; } // was this Advised for writing?
+        public string CorrelationId { get; set; }
     }
 
     public class WWMxWriteItemInfo
@@ -39,6 +40,21 @@ namespace RMQWonderwareAdapter
     {
         ArchestrA.MxAccess.LMXProxyServerClass LMX_Server = null;
         private Dictionary<int, WWMxItem> RegisteredItems;
+
+        public List<WWMxItem> GetSubScriptions()
+        {
+            var L = new List<WWMxItem>();
+
+            foreach (var item in RegisteredItems)
+            {
+                if (item.Value.OnAdvise)
+                {
+                    L.Add(item.Value);
+                }
+            }
+
+            return L;
+        }
 
         // handle of registered LMX server interface
         int hLMX = 0;
@@ -66,24 +82,24 @@ namespace RMQWonderwareAdapter
             WriteCompleted?.Invoke(this, i);
         }
 
-        public bool Subscribe(string strItemName)
+        public bool Subscribe(string strItemName, string CorrelationId)
         {
-            return Advise(strItemName, false);
+            return Advise(strItemName, false, CorrelationId);
         }
 
-        public bool Unsubscribe(string strItemName)
+        public bool Unsubscribe(string strItemName, string CorrelationId)
         {
-            return UnAdvise(strItemName);
+            return UnAdvise(strItemName, CorrelationId);
         }
 
-        public bool ReadOnce(string strItemName)
+        public bool ReadOnce(string strItemName, string CorrelationId)
         {
-            return Advise(strItemName, true);
+            return Advise(strItemName, true, CorrelationId);
         }
 
-        public bool Write(string strItemName, object Value)
+        public bool Write(string strItemName, object Value, string CorrelationId)
         {
-            if(!Advise(strItemName, false))
+            if(!Advise(strItemName, false, CorrelationId))
                 return false;
 
             try
@@ -175,7 +191,7 @@ namespace RMQWonderwareAdapter
 
                     if(i.ReadOnlyOnce && !i.Writing)
                     {
-                        UnAdvise(i.ItemName);
+                        UnAdvise(i.ItemName, i.CorrelationId);
                         PostLogMessage("UnAdvising " + i.ItemName + " ReadOnlyOnce ");
                     }
                 }
@@ -231,7 +247,7 @@ namespace RMQWonderwareAdapter
             return null;
         }
 
-        private bool AddItem(string strItemName)
+        private bool AddItem(string strItemName, string CorrelationId)
         {
             // ensure we are Registered first
             if (hLMX == 0)
@@ -256,6 +272,7 @@ namespace RMQWonderwareAdapter
                     i.ItemName = strItemName;
                     i.OnAdvise = false;
                     i.Added = true;
+                    i.CorrelationId = CorrelationId;
 
                     RegisteredItems.Add(hItem, i);
 
@@ -275,13 +292,13 @@ namespace RMQWonderwareAdapter
             return false;
         }
 
-        private bool Advise(string strItemName, bool OnlyOnce)
+        private bool Advise(string strItemName, bool OnlyOnce, string CorrelationId)
         {
             WWMxItem i = LookupItem(strItemName);
             if (i == null)
             {
                 // Note:  We should AddItem before attempting to Advise it (that's where the hItem comes from)
-                if(!AddItem(strItemName))
+                if(!AddItem(strItemName, CorrelationId))
                 {
                     PostLogMessage("Advise " + strItemName + " failed to AddItem");
                     return false;
@@ -320,7 +337,7 @@ namespace RMQWonderwareAdapter
             {
                 foreach (var item in RegisteredItems)
                 {
-                    UnAdvise(item.Value.ItemName);
+                    UnAdvise(item.Value.ItemName, item.Value.CorrelationId);
                 }
             }
             catch (Exception ex)
@@ -353,7 +370,7 @@ namespace RMQWonderwareAdapter
             }
         }
 
-        private bool UnAdvise(string strItemName)
+        private bool UnAdvise(string strItemName, string CorrelationId)
         {
             WWMxItem i = LookupItem(strItemName);
             if (i == null)
@@ -389,7 +406,7 @@ namespace RMQWonderwareAdapter
 
             // Note:  If item is on advise, we should Unadvise it before we Remove it
             if (i.OnAdvise)
-                UnAdvise(strItemName);
+                UnAdvise(strItemName, i.CorrelationId);
 
             try
             {
