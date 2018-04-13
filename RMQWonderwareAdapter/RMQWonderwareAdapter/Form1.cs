@@ -156,6 +156,7 @@ namespace RMQWonderwareAdapter
                     //WWMgr.ReadOnce(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
                     break;
                 case "WRITE":
+                    LogToGUI("Trying to write to tag " + ParsedMessage.TagName  + " with value " + ParsedMessage.Value);
                     WWMgr.Write(ParsedMessage.TagName, ParsedMessage.Value, e.Message.BasicProperties.CorrelationId);
                     break;
                 default:
@@ -202,7 +203,13 @@ namespace RMQWonderwareAdapter
 
         private void WWMgr_WriteCompleted(object sender, WWMxWriteItemInfo e)
         {
-            WWMgr_LogMessage(sender, !e.WriteOK ? " write failed!" : e.Item.ItemName + " was written" );
+            WWMgr_LogMessage(sender, !e.WriteOK ? " write failed!" : e.Item?.ItemName + " was written" );
+
+            if(e.WriteOK && e.Item != null)
+            {
+                // update the in-memory cache
+                AllTags.Where(t => t.ItemName == e.Item.ItemName).ToList().ForEach( t => t.LastValue = e.Item.LastValue );
+            }
         }
 
         private void WWMgr_DataChange(object sender, WWMxItem e)
@@ -383,5 +390,39 @@ namespace RMQWonderwareAdapter
             this.dataGridViewTags.Refresh();
         }
 
+        private void writeValueToTagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var inputDlg = new FormWriteTag())
+            {
+                var Tag1 = "";
+                var selectedRowCount = dataGridViewTags.Rows.GetRowCount(DataGridViewElementStates.Selected);
+                if (selectedRowCount > 0)
+                {
+                    Tag1 = dataGridViewTags.SelectedRows[0].Cells["ItemName"].Value as string;
+                }
+
+                inputDlg.textBoxInput.Text = Tag1;
+
+                if (inputDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                var Tag = inputDlg.textBoxInput.Text;
+                var Value = inputDlg.textBoxValue.Text;
+                if (Tag.Length > 0 && Value.Length > 0)
+                {
+                    var i = AllTags.Where(t => t.ItemName == Tag).FirstOrDefault();
+                    if(i == null || !i.OnAdvise)
+                    {
+                        LogToGUI("Subscribing PLC tag " + Tag);
+                        WWMgr.Subscribe(Tag, null);
+                    }
+
+                    LogToGUI("Trying to write to tag " + Tag  + " with value " + Value);
+                    WWMgr.Write(Tag, Value, null);
+
+                    RefreshData();
+                }
+            }
+        }
     }
 }

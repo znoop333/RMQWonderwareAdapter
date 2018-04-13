@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace RMQWonderwareAdapter
 {
-    public partial class FormInputSubscription : Form
+    public partial class FormWriteTag : Form
     {
-        public FormInputSubscription()
+        public FormWriteTag()
         {
             InitializeComponent();
         }
@@ -23,10 +23,10 @@ namespace RMQWonderwareAdapter
             this.Close();
         }
 
-        private void FormInputSubscription_Load(object sender, EventArgs e)
+        private void FormWriteTag_Load(object sender, EventArgs e)
         {
-            this.textBoxInput.Focus();
-            this.ActiveControl = this.textBoxInput;
+            this.textBoxValue.Focus();
+            this.ActiveControl = this.textBoxValue;
         }
     }
 }

@@ -31,8 +31,10 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tableLayoutPanelMain = new System.Windows.Forms.TableLayoutPanel();
-            this.textBoxLog = new System.Windows.Forms.TextBox();
             this.labelStatus = new System.Windows.Forms.Label();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.dataGridViewTags = new System.Windows.Forms.DataGridView();
+            this.textBoxLog = new System.Windows.Forms.TextBox();
             this.timerFlushTextboxes = new System.Windows.Forms.Timer(this.components);
             this.timerFlushLogs = new System.Windows.Forms.Timer(this.components);
             this.timerCloseLogFiles = new System.Windows.Forms.Timer(this.components);
@@ -42,17 +44,16 @@
             this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addSubscriptionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeAllSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.dataGridViewTags = new System.Windows.Forms.DataGridView();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.removeAllSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.writeValueToTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanelMain.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewTags)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewTags)).BeginInit();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanelMain
@@ -73,17 +74,6 @@
             this.tableLayoutPanelMain.Size = new System.Drawing.Size(834, 466);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
-            // textBoxLog
-            // 
-            this.textBoxLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxLog.Font = new System.Drawing.Font("Verdana", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxLog.Location = new System.Drawing.Point(0, 0);
-            this.textBoxLog.Multiline = true;
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxLog.Size = new System.Drawing.Size(576, 413);
-            this.textBoxLog.TabIndex = 0;
-            // 
             // labelStatus
             // 
             this.labelStatus.AutoSize = true;
@@ -96,6 +86,55 @@
             this.labelStatus.TabIndex = 1;
             this.labelStatus.Text = "Status: OK";
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // splitContainer1
+            // 
+            this.tableLayoutPanelMain.SetColumnSpan(this.splitContainer1, 4);
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(3, 3);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridViewTags);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.textBoxLog);
+            this.splitContainer1.Size = new System.Drawing.Size(828, 413);
+            this.splitContainer1.SplitterDistance = 248;
+            this.splitContainer1.TabIndex = 4;
+            // 
+            // dataGridViewTags
+            // 
+            this.dataGridViewTags.AllowUserToAddRows = false;
+            this.dataGridViewTags.AllowUserToDeleteRows = false;
+            this.dataGridViewTags.AllowUserToResizeColumns = false;
+            this.dataGridViewTags.AllowUserToResizeRows = false;
+            this.dataGridViewTags.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dataGridViewTags.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+            this.dataGridViewTags.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewTags.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewTags.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
+            this.dataGridViewTags.Location = new System.Drawing.Point(0, 0);
+            this.dataGridViewTags.Name = "dataGridViewTags";
+            this.dataGridViewTags.ReadOnly = true;
+            this.dataGridViewTags.RowHeadersVisible = false;
+            this.dataGridViewTags.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridViewTags.ShowEditingIcon = false;
+            this.dataGridViewTags.Size = new System.Drawing.Size(248, 413);
+            this.dataGridViewTags.TabIndex = 3;
+            // 
+            // textBoxLog
+            // 
+            this.textBoxLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxLog.Font = new System.Drawing.Font("Verdana", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxLog.Location = new System.Drawing.Point(0, 0);
+            this.textBoxLog.Multiline = true;
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxLog.Size = new System.Drawing.Size(576, 413);
+            this.textBoxLog.TabIndex = 0;
             // 
             // timerFlushTextboxes
             // 
@@ -137,7 +176,7 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -147,7 +186,8 @@
             this.showSubscriptionsToolStripMenuItem,
             this.addSubscriptionToolStripMenuItem,
             this.toolStripSeparator1,
-            this.removeAllSubscriptionsToolStripMenuItem});
+            this.removeAllSubscriptionsToolStripMenuItem,
+            this.writeValueToTagToolStripMenuItem});
             this.diagnosticsToolStripMenuItem.Name = "diagnosticsToolStripMenuItem";
             this.diagnosticsToolStripMenuItem.Size = new System.Drawing.Size(80, 20);
             this.diagnosticsToolStripMenuItem.Text = "&Diagnostics";
@@ -166,6 +206,11 @@
             this.addSubscriptionToolStripMenuItem.Text = "&Add Subscription";
             this.addSubscriptionToolStripMenuItem.Click += new System.EventHandler(this.addSubscriptionToolStripMenuItem_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(202, 6);
+            // 
             // removeAllSubscriptionsToolStripMenuItem
             // 
             this.removeAllSubscriptionsToolStripMenuItem.Name = "removeAllSubscriptionsToolStripMenuItem";
@@ -173,48 +218,12 @@
             this.removeAllSubscriptionsToolStripMenuItem.Text = "&Remove all subscriptions";
             this.removeAllSubscriptionsToolStripMenuItem.Click += new System.EventHandler(this.removeAllSubscriptionsToolStripMenuItem_Click);
             // 
-            // toolStripSeparator1
+            // writeValueToTagToolStripMenuItem
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(202, 6);
-            // 
-            // dataGridViewTags
-            // 
-            this.dataGridViewTags.AllowUserToAddRows = false;
-            this.dataGridViewTags.AllowUserToDeleteRows = false;
-            this.dataGridViewTags.AllowUserToResizeColumns = false;
-            this.dataGridViewTags.AllowUserToResizeRows = false;
-            this.dataGridViewTags.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dataGridViewTags.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.dataGridViewTags.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewTags.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewTags.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dataGridViewTags.Location = new System.Drawing.Point(0, 0);
-            this.dataGridViewTags.Name = "dataGridViewTags";
-            this.dataGridViewTags.ReadOnly = true;
-            this.dataGridViewTags.RowHeadersVisible = false;
-            this.dataGridViewTags.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridViewTags.ShowEditingIcon = false;
-            this.dataGridViewTags.Size = new System.Drawing.Size(248, 413);
-            this.dataGridViewTags.TabIndex = 3;
-            // 
-            // splitContainer1
-            // 
-            this.tableLayoutPanelMain.SetColumnSpan(this.splitContainer1, 4);
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(3, 3);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.dataGridViewTags);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.textBoxLog);
-            this.splitContainer1.Size = new System.Drawing.Size(828, 413);
-            this.splitContainer1.SplitterDistance = 248;
-            this.splitContainer1.TabIndex = 4;
+            this.writeValueToTagToolStripMenuItem.Name = "writeValueToTagToolStripMenuItem";
+            this.writeValueToTagToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.writeValueToTagToolStripMenuItem.Text = "Write value to tag";
+            this.writeValueToTagToolStripMenuItem.Click += new System.EventHandler(this.writeValueToTagToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -231,14 +240,14 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tableLayoutPanelMain.ResumeLayout(false);
             this.tableLayoutPanelMain.PerformLayout();
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewTags)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewTags)).EndInit();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -262,6 +271,7 @@
         private System.Windows.Forms.ToolStripMenuItem removeAllSubscriptionsToolStripMenuItem;
         private System.Windows.Forms.DataGridView dataGridViewTags;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.ToolStripMenuItem writeValueToTagToolStripMenuItem;
     }
 }
 
