@@ -35,6 +35,9 @@ namespace RMQWonderwareAdapter
         private SynchronizationContext _syncContext = null;
         WWMxAccessManager WWMgr;
 
+        private BindingSource SBind;
+        List<WWMxItem> AllTags = new List<WWMxItem>();
+
         public Form1()
         {
             InitializeComponent();
@@ -75,6 +78,10 @@ namespace RMQWonderwareAdapter
             WWMgr.WriteCompleted += WWMgr_WriteCompleted;
 
             WWMgr.Register();
+
+            SetupDataGridView();
+            RefreshData();
+
         }
 
         private void Rmq_LogMessage(object sender, string e)
@@ -125,10 +132,12 @@ namespace RMQWonderwareAdapter
                     if(b)
                     {
                         LogToGUI("Subscribed to " + ParsedMessage.TagName);
+                        this.labelStatus.Text = "Subscribed to " + ParsedMessage.TagName;
                     }
                     else
                     {
                         LogToGUI("FAILED to subscribed to " + ParsedMessage.TagName);
+                        this.labelStatus.Text = "Subscribed to " + ParsedMessage.TagName;
                     }
 
                     break;
@@ -136,11 +145,11 @@ namespace RMQWonderwareAdapter
                     WWMgr.Unsubscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
                     break;
                 case "READ":
-                    var i = WWMgr.GetLastValue(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
-                    if (i != null)
+                    var ii = this.AllTags.Where(t => t.ItemName == ParsedMessage.TagName).FirstOrDefault();
+                    if(ii != null)
                     {
                         LogToGUI("GetLastValue for " + ParsedMessage.TagName );
-                        SendResponse(i);
+                        SendResponse(ii);
                     }
                     else
                         LogToGUI("Item " + ParsedMessage.TagName + " not advised");
@@ -154,12 +163,14 @@ namespace RMQWonderwareAdapter
                     break;
             }
 
+            RefreshData();
+
         }
 
         private void SendResponse(WWMxItem i)
         {
             RmqResponseMessage m1 = new RmqResponseMessage();
-            if (m1 == null)
+            if (i == null || m1 == null)
             {
                 LogToGUI("new RmqResponseMessage failed??");
                 return;
@@ -167,10 +178,10 @@ namespace RMQWonderwareAdapter
 
             m1.Command = "LastValue";
             m1.TagName = i.ItemName;
-            m1.Value = i.LastValue.ToString();
+            m1.Value = i.LastValue?.ToString();
             m1.CorrelationId = i.CorrelationId;
             m1.Timestamp = i.LastTimestamp;
-            m1.DataType = i.LastValue.GetType().Name;
+            m1.DataType = i.LastValue?.GetType().Name;
 
             string key = i.ItemName, Message = JsonConvert.SerializeObject(m1);
             rmq.PutMessage(key, Message);
@@ -197,6 +208,7 @@ namespace RMQWonderwareAdapter
         private void WWMgr_DataChange(object sender, WWMxItem e)
         {
             WWMgr_LogMessage(sender, e.ItemName + " was changed to " + e.LastValue);
+            this.labelStatus.Text = e.ItemName + " was changed to " + e.LastValue;
 
             RmqResponseMessage m = new RmqResponseMessage();
             m.Command = "DataChange";
@@ -208,6 +220,8 @@ namespace RMQWonderwareAdapter
 
             string key = e.ItemName, Message = JsonConvert.SerializeObject(m);
             rmq.PutMessage(key, Message);
+
+            RefreshData();
         }
 
         private void WWMgr_LogMessage(object sender, string e)
@@ -232,11 +246,11 @@ namespace RMQWonderwareAdapter
             LogHelper.FlushLogFiles();
             LogHelper.CloseLogFiles();
 
-            await Task.Delay(15000);
-            Environment.Exit(0);
+            //await Task.Delay(15000);
+            //Environment.Exit(0);
 
             // is channel.BasicCancel() causing a hang here? see https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
-            await rmq.Unsubscribe();
+            //await rmq.Unsubscribe();
             await rmq.Disconnect();
 
             LogHelper.AppendToLogfile(fn, "RMQ exited");
@@ -294,6 +308,7 @@ namespace RMQWonderwareAdapter
                 {
                     LogToGUI("Subscribing PLC tag " + s);
                     WWMgr.Subscribe(s, null);
+                    RefreshData();
                 }
             }
         }
@@ -302,7 +317,71 @@ namespace RMQWonderwareAdapter
         {
             LogToGUI("Removing All Subscriptions...");
             WWMgr.RemoveAll();
+            RefreshData();
             LogToGUI("Remove All Subscriptions done");
         }
+
+        private void SetupDataGridView()
+        {
+            SBind = new BindingSource();
+            SBind.DataSource = AllTags;
+
+            this.dataGridViewTags.AutoGenerateColumns = false;
+            this.dataGridViewTags.DataSource = SBind;
+
+            var c = new DataGridViewTextBoxColumn()
+            {
+                Name = "ItemName",
+                HeaderText = "Name",
+                DataPropertyName = "ItemName",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
+                Name = "LastValue",
+                HeaderText = "Value",
+                DataPropertyName = "LastValue",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
+                Name = "LastTimestamp",
+                HeaderText = "Timestamp",
+                DataPropertyName = "LastTimestamp",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
+                Name = "OnAdvise",
+                HeaderText = "Advised",
+                DataPropertyName = "OnAdvise",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
+                Name = "CorrelationId",
+                HeaderText = "Correlation ID",
+                DataPropertyName = "CorrelationId",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+            
+        }
+
+        void RefreshData()
+        {
+            this.AllTags = WWMgr.GetAllTags();
+            this.SBind.DataSource = this.AllTags;
+            this.dataGridViewTags.Refresh();
+        }
+
     }
 }

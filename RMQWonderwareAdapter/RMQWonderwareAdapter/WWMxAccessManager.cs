@@ -56,6 +56,11 @@ namespace RMQWonderwareAdapter
             return L;
         }
 
+        public List<WWMxItem> GetAllTags()
+        {
+            return RegisteredItems.Values.ToList();
+        }
+
         // handle of registered LMX server interface
         int hLMX = 0;
 

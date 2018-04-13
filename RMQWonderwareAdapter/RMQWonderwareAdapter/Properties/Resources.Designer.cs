@@ -59,5 +59,15 @@ namespace RMQWonderwareAdapter.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon rmq_small {
+            get {
+                object obj = ResourceManager.GetObject("rmq_small", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }
