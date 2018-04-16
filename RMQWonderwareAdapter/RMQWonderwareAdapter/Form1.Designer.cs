@@ -42,11 +42,11 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.diagnosticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addSubscriptionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.removeAllSubscriptionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.writeValueToTagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timerDeadmanSwitch = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanelMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -71,7 +71,7 @@
             this.tableLayoutPanelMain.RowCount = 2;
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanelMain.Size = new System.Drawing.Size(834, 466);
+            this.tableLayoutPanelMain.Size = new System.Drawing.Size(1261, 466);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
             // labelStatus
@@ -82,7 +82,7 @@
             this.labelStatus.Font = new System.Drawing.Font("Verdana", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelStatus.Location = new System.Drawing.Point(3, 419);
             this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(828, 47);
+            this.labelStatus.Size = new System.Drawing.Size(1255, 47);
             this.labelStatus.TabIndex = 1;
             this.labelStatus.Text = "Status: OK";
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -101,8 +101,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.textBoxLog);
-            this.splitContainer1.Size = new System.Drawing.Size(828, 413);
-            this.splitContainer1.SplitterDistance = 248;
+            this.splitContainer1.Size = new System.Drawing.Size(1255, 413);
+            this.splitContainer1.SplitterDistance = 549;
             this.splitContainer1.TabIndex = 4;
             // 
             // dataGridViewTags
@@ -122,7 +122,7 @@
             this.dataGridViewTags.RowHeadersVisible = false;
             this.dataGridViewTags.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewTags.ShowEditingIcon = false;
-            this.dataGridViewTags.Size = new System.Drawing.Size(248, 413);
+            this.dataGridViewTags.Size = new System.Drawing.Size(549, 413);
             this.dataGridViewTags.TabIndex = 3;
             // 
             // textBoxLog
@@ -133,7 +133,7 @@
             this.textBoxLog.Multiline = true;
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxLog.Size = new System.Drawing.Size(576, 413);
+            this.textBoxLog.Size = new System.Drawing.Size(702, 413);
             this.textBoxLog.TabIndex = 0;
             // 
             // timerFlushTextboxes
@@ -161,7 +161,7 @@
             this.diagnosticsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(834, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1261, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -183,7 +183,6 @@
             // diagnosticsToolStripMenuItem
             // 
             this.diagnosticsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showSubscriptionsToolStripMenuItem,
             this.addSubscriptionToolStripMenuItem,
             this.toolStripSeparator1,
             this.removeAllSubscriptionsToolStripMenuItem,
@@ -191,13 +190,6 @@
             this.diagnosticsToolStripMenuItem.Name = "diagnosticsToolStripMenuItem";
             this.diagnosticsToolStripMenuItem.Size = new System.Drawing.Size(80, 20);
             this.diagnosticsToolStripMenuItem.Text = "&Diagnostics";
-            // 
-            // showSubscriptionsToolStripMenuItem
-            // 
-            this.showSubscriptionsToolStripMenuItem.Name = "showSubscriptionsToolStripMenuItem";
-            this.showSubscriptionsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.showSubscriptionsToolStripMenuItem.Text = "Show &Subscriptions";
-            this.showSubscriptionsToolStripMenuItem.Click += new System.EventHandler(this.showSubscriptionsToolStripMenuItem_Click);
             // 
             // addSubscriptionToolStripMenuItem
             // 
@@ -225,11 +217,17 @@
             this.writeValueToTagToolStripMenuItem.Text = "Write value to tag";
             this.writeValueToTagToolStripMenuItem.Click += new System.EventHandler(this.writeValueToTagToolStripMenuItem_Click);
             // 
+            // timerDeadmanSwitch
+            // 
+            this.timerDeadmanSwitch.Enabled = true;
+            this.timerDeadmanSwitch.Interval = 5000;
+            this.timerDeadmanSwitch.Tick += new System.EventHandler(this.timerDeadmanSwitch_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(834, 490);
+            this.ClientSize = new System.Drawing.Size(1261, 490);
             this.Controls.Add(this.tableLayoutPanelMain);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -265,13 +263,13 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showSubscriptionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addSubscriptionToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem removeAllSubscriptionsToolStripMenuItem;
         private System.Windows.Forms.DataGridView dataGridViewTags;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ToolStripMenuItem writeValueToTagToolStripMenuItem;
+        private System.Windows.Forms.Timer timerDeadmanSwitch;
     }
 }
 

@@ -19,9 +19,9 @@ namespace RMQWonderwareAdapter
     /// Subscribes to PLC tags from Wonderware DA server and publish them into RabbitMQ.
     /// </summary>
     /// <remarks>
-    /// This program subscribes to "/exchanges/PLC_TAG_MANAGER" and listens for command messages requesting:
+    /// This program subscribes to "/exchanges/plctags_in" and listens for command messages requesting:
     /// <list type="numbered">
-    ///     <item>subscribe to a given PLC tag and publish any changes into "/exchanges/PLC_TAGS" with the topic as the PLC Tag name</item>
+    ///     <item>subscribe to a given PLC tag and publish any changes into "/exchanges/plctags_out" with the topic as the PLC Tag name</item>
     ///     <item>unsubscribe a given PLC tag (stop publishing)</item>
     ///     <item>immediately write a specific value to a given PLC tag and send a response (RFC-style) confirming the write</item>
     ///     <item>immediately read a given PLC tag (without subscribing) and send a response (RFC-style) with the current value</item>
@@ -49,6 +49,8 @@ namespace RMQWonderwareAdapter
             PC_ID = Settings.Default.PC_ID;
 
             Directory.CreateDirectory(Settings.Default.LOG_PATH);
+
+            MyDbLib.UPDATE_TRV_PCUPTIME(PC_ID);
 
             rmq = new RMQManager();
             rmq.HostName = Settings.Default.RMQHostName;
@@ -81,6 +83,43 @@ namespace RMQWonderwareAdapter
 
             SetupDataGridView();
             RefreshData();
+
+            LogToGUI("Program loaded");
+
+            ReadSubscriptionsFromDatabase();
+
+        }
+
+        private void ReadSubscriptionsFromDatabase()
+        {
+            var dt = MyDbLib.PLC_TAG_LIST_USED();
+            if (dt == null || dt.Rows.Count == 0)
+                return;
+
+            var pi = new ProgramInfo();
+            LogToGUI("Reading Subscriptions From Database");
+
+            foreach (var dr in dt)
+            {
+                var info = MyDbLib.PLC_TAG_LOOKUP_WW_ITEM_NAME(dr.PLC_IP, dr.TAG_ID);
+                if (info == null)
+                    continue;
+
+                var b = WWMgr.Subscribe(dr.PLC_IP, dr.TAG_ID, info.WW_ITEM_NAME, dr.CorrelationId, info.DESCRIPTION);
+
+                if (b)
+                {
+                    LogToGUI("Resubscribed to " + info.WW_ITEM_NAME + " from PLC " + dr.PLC_IP + " Tag " + dr.TAG_ID + " (" + info.DESCRIPTION + ")");
+                    this.labelStatus.Text = "Resubscribed to " + info.WW_ITEM_NAME;
+                    MyDbLib.PLC_TAG_SUBSCRIBED(dr.PLC_IP, dr.TAG_ID, pi.IP, dr.RequesterName, dr.CorrelationId);
+                }
+                else
+                {
+                    LogToGUI("FAILED to resubscribe to " + info.WW_ITEM_NAME + " from PLC " + dr.PLC_IP + " Tag " + dr.TAG_ID + " (" + info.DESCRIPTION + ")");
+                    this.labelStatus.Text = "FAILED to resubscribe to " + info.WW_ITEM_NAME;
+                    MyDbLib.PLC_TAG_SUBSCRIPTION_CHANGED(dr.PLC_IP, dr.TAG_ID, "N", "N", pi.IP, dr.RequesterName, dr.CorrelationId);
+                }
+            }
 
         }
 
@@ -125,27 +164,45 @@ namespace RMQWonderwareAdapter
             Win32Helper.LogHelper.AppendToLogfile(FilenameForLog("JSON"), s);
             bool b;
 
+            InternalState = 2;
+            SEQUENCE_NO = ParsedMessage.TagName;
+            VIN = ParsedMessage.Command;
+            LastAction = DateTime.Now;
+
+            var dr = MyDbLib.PLC_TAG_LOOKUP_WW_ITEM_NAME(ParsedMessage.PLC_IP, ParsedMessage.TagName);
+            if (dr == null)
+            {
+                LogToGUI("PLC " + ParsedMessage.PLC_IP + " Tag " + ParsedMessage.TagName + " not found in MST_PLC_TAGS!");
+                return;
+            }
+
+            var itemName = dr.WW_ITEM_NAME;
+
             switch (ParsedMessage.Command)
             {
                 case "SUBSCRIBE":
-                    b = WWMgr.Subscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    b = WWMgr.Subscribe(ParsedMessage.PLC_IP, ParsedMessage.TagName, itemName, e.Message.BasicProperties.CorrelationId, dr.DESCRIPTION);
                     if(b)
                     {
-                        LogToGUI("Subscribed to " + ParsedMessage.TagName);
+                        LogToGUI("Subscribed to " + ParsedMessage.TagName + " from PLC " + ParsedMessage.PLC_IP + " Tag " + ParsedMessage.TagName + " (" + dr.DESCRIPTION + ")");
                         this.labelStatus.Text = "Subscribed to " + ParsedMessage.TagName;
+                        MyDbLib.PLC_TAG_SUBSCRIBED(ParsedMessage.PLC_IP, ParsedMessage.TagName, ParsedMessage.RequesterIP, ParsedMessage.RequesterName, e.Message.BasicProperties.CorrelationId);
                     }
                     else
                     {
-                        LogToGUI("FAILED to subscribed to " + ParsedMessage.TagName);
+                        LogToGUI("FAILED to subscribed to " + ParsedMessage.TagName + " from PLC " + ParsedMessage.PLC_IP + " Tag " + ParsedMessage.TagName + " (" + dr.DESCRIPTION + ")");
                         this.labelStatus.Text = "Subscribed to " + ParsedMessage.TagName;
                     }
 
                     break;
                 case "UNSUBSCRIBE":
                     WWMgr.Unsubscribe(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
+                    MyDbLib.PLC_TAG_SUBSCRIPTION_CHANGED(ParsedMessage.PLC_IP, ParsedMessage.TagName, "N", "N", null, null, null);
                     break;
                 case "READ":
-                    var ii = this.AllTags.Where(t => t.ItemName == ParsedMessage.TagName).FirstOrDefault();
+
+                    LogToGUI("GetLastValue for " + ParsedMessage.PLC_IP + ", " + ParsedMessage.TagName + ", " + ParsedMessage.CorrelationId );
+                    var ii = this.AllTags.Where(t => t.TagName == ParsedMessage.TagName && t.PLC_IP == ParsedMessage.PLC_IP).FirstOrDefault();
                     if(ii != null)
                     {
                         LogToGUI("GetLastValue for " + ParsedMessage.TagName );
@@ -153,11 +210,11 @@ namespace RMQWonderwareAdapter
                     }
                     else
                         LogToGUI("Item " + ParsedMessage.TagName + " not advised");
-                    //WWMgr.ReadOnce(ParsedMessage.TagName, e.Message.BasicProperties.CorrelationId);
                     break;
                 case "WRITE":
                     LogToGUI("Trying to write to tag " + ParsedMessage.TagName  + " with value " + ParsedMessage.Value);
-                    WWMgr.Write(ParsedMessage.TagName, ParsedMessage.Value, e.Message.BasicProperties.CorrelationId);
+                    WWMgr.Write(ParsedMessage.PLC_IP, ParsedMessage.TagName, itemName, ParsedMessage.Value, e.Message.BasicProperties.CorrelationId, dr.DESCRIPTION);
+                    MyDbLib.PLC_TAG_UPDATED(ParsedMessage.PLC_IP, ParsedMessage.TagName, ParsedMessage.Value, DateTime.Now, 0);
                     break;
                 default:
                     LogToGUI("Unknown command " + ParsedMessage.Command);
@@ -178,11 +235,14 @@ namespace RMQWonderwareAdapter
             }
 
             m1.Command = "LastValue";
-            m1.TagName = i.ItemName;
+            m1.PLC_IP = i.PLC_IP;
+            m1.TagName = i.TagName;
+            m1.ItemName = i.ItemName;
             m1.Value = i.LastValue?.ToString();
             m1.CorrelationId = i.CorrelationId;
             m1.Timestamp = i.LastTimestamp;
             m1.DataType = i.LastValue?.GetType().Name;
+            m1.Description = i.Description;
 
             string key = i.ItemName, Message = JsonConvert.SerializeObject(m1);
             rmq.PutMessage(key, Message);
@@ -217,13 +277,27 @@ namespace RMQWonderwareAdapter
             WWMgr_LogMessage(sender, e.ItemName + " was changed to " + e.LastValue);
             this.labelStatus.Text = e.ItemName + " was changed to " + e.LastValue;
 
+            InternalState = 1;
+            SEQUENCE_NO = e.ItemName;
+            VIN = e.LastValue.ToString();
+            LastAction = DateTime.Now;
+
+            DateTime updated;
+            if (!DateTime.TryParse(e.LastTimestamp, out updated))
+                updated = DateTime.Now;
+
+            MyDbLib.PLC_TAG_UPDATED(e.PLC_IP, e.TagName, e.LastValue.ToString(), updated, e.LastQuality);
+
             RmqResponseMessage m = new RmqResponseMessage();
             m.Command = "DataChange";
-            m.TagName = e.ItemName;
+            m.PLC_IP = e.PLC_IP;
+            m.ItemName = e.ItemName;
+            m.TagName = e.TagName;
             m.Value = e.LastValue.ToString();
             m.CorrelationId = e.CorrelationId;
             m.Timestamp = e.LastTimestamp;
             m.DataType = e.LastValue.GetType().Name;
+            m.Description = e.Description;
 
             string key = e.ItemName, Message = JsonConvert.SerializeObject(m);
             rmq.PutMessage(key, Message);
@@ -289,20 +363,6 @@ namespace RMQWonderwareAdapter
             Environment.Exit(0);
         }
 
-        private void showSubscriptionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            LogToGUI("GetSubScriptions:");
-
-            var L = WWMgr.GetSubScriptions();
-            foreach (var i in L)
-            {
-                LogToGUI(String.Format("Tag {0}, handle {1}, Last Value {2}, timestamp {3}, quality {4}", i.ItemName, i.hItem, i.LastValue, i.LastTimestamp, i.LastQuality));
-            }
-
-            if (L.Count == 0)
-                LogToGUI("No subscriptions are advised");
-        }
-
         private void addSubscriptionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (var inputDlg = new FormInputSubscription())
@@ -313,8 +373,18 @@ namespace RMQWonderwareAdapter
                 var s = inputDlg.textBoxInput.Text;
                 if (s.Length > 0)
                 {
-                    LogToGUI("Subscribing PLC tag " + s);
-                    WWMgr.Subscribe(s, null);
+                    var dr = MyDbLib.PLC_TAG_LOOKUP_PLC_IP(s);
+                    if(dr == null)
+                    {
+                        LogToGUI("Wonderware item " + s + " not found in MST_PLC_TAGS!");
+                        return;
+                    }
+
+                    LogToGUI("Subscribing Wonderware item " + s + " from PLC + " + dr.PLC_IP + " Tag " + dr.TAG_ID + " (" + dr.DESCRIPTION + ")");
+                    WWMgr.Subscribe(dr.PLC_IP, dr.TAG_ID, s, null, dr.DESCRIPTION);
+
+                    ProgramInfo pi = new ProgramInfo();
+                    MyDbLib.PLC_TAG_SUBSCRIBED(dr.PLC_IP, dr.TAG_ID, pi.IP, "RMQWonderwareAdapter", "");
                     RefreshData();
                 }
             }
@@ -338,8 +408,26 @@ namespace RMQWonderwareAdapter
 
             var c = new DataGridViewTextBoxColumn()
             {
+                Name = "PLC_IP",
+                HeaderText = "PLC",
+                DataPropertyName = "PLC_IP",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
+                Name = "TagName",
+                HeaderText = "Tag",
+                DataPropertyName = "TagName",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
                 Name = "ItemName",
-                HeaderText = "Name",
+                HeaderText = "WW Item",
                 DataPropertyName = "ItemName",
                 SortMode = DataGridViewColumnSortMode.Automatic
             };
@@ -359,6 +447,15 @@ namespace RMQWonderwareAdapter
                 Name = "LastTimestamp",
                 HeaderText = "Timestamp",
                 DataPropertyName = "LastTimestamp",
+                SortMode = DataGridViewColumnSortMode.Automatic
+            };
+            dataGridViewTags.Columns.Add(c);
+
+            c = new DataGridViewTextBoxColumn()
+            {
+                Name = "Description",
+                HeaderText = "Description",
+                DataPropertyName = "Description",
                 SortMode = DataGridViewColumnSortMode.Automatic
             };
             dataGridViewTags.Columns.Add(c);
@@ -411,18 +508,57 @@ namespace RMQWonderwareAdapter
                 if (Tag.Length > 0 && Value.Length > 0)
                 {
                     var i = AllTags.Where(t => t.ItemName == Tag).FirstOrDefault();
-                    if(i == null || !i.OnAdvise)
+                    var dr = MyDbLib.PLC_TAG_LOOKUP_PLC_IP(Tag);
+                    if (dr == null)
                     {
-                        LogToGUI("Subscribing PLC tag " + Tag);
-                        WWMgr.Subscribe(Tag, null);
+                        LogToGUI("Failed to find Wonderware item " + Tag + " in MST_PLC_TAGS");
+                        return;
+                    }
+
+                    if (i == null || !i.OnAdvise)
+                    {
+                        LogToGUI("Subscribing Wonderware item " + Tag);
+                        WWMgr.Subscribe(dr.PLC_IP, dr.TAG_ID, Tag, null, dr.DESCRIPTION);
                     }
 
                     LogToGUI("Trying to write to tag " + Tag  + " with value " + Value);
-                    WWMgr.Write(Tag, Value, null);
+                    WWMgr.Write(dr.PLC_IP, dr.TAG_ID, Tag, Value, null, dr.DESCRIPTION);
 
                     RefreshData();
                 }
             }
+        }
+
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == Program.WM_SHOWME_RESTORE_WINDOW)
+            {
+                ShowMe();
+            }
+            base.WndProc(ref m);
+        }
+        private void ShowMe()
+        {
+            if (WindowState == FormWindowState.Minimized)
+            {
+                WindowState = FormWindowState.Normal;
+            }
+            // get our current "TopMost" value (ours will always be false though)
+            bool top = TopMost;
+            // make our form jump to the top of everything
+            TopMost = true;
+            // set it back to whatever it was
+            TopMost = top;
+        }
+
+        private int InternalState = 0;
+        private string SEQUENCE_NO = "", VIN = "";
+        private DateTime LastAction = DateTime.Now;
+
+        private void timerDeadmanSwitch_Tick(object sender, EventArgs e)
+        {
+            MyDbLib.UPDATE_TRV_PCINFO(PC_ID, DateTime.Now, InternalState, SEQUENCE_NO, VIN, LastAction);
         }
     }
 }

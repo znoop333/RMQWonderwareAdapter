@@ -103,5 +103,16 @@ namespace RMQWonderwareAdapter.Properties {
                 return ((string)(this["LOG_PATH"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=test-db.ommc.com;Initial Catalog=OmmcMes;Persist Security Info=True;U" +
+            "ser ID=djohnson;Password=djohnson")]
+        public string OmmcMesConnectionString {
+            get {
+                return ((string)(this["OmmcMesConnectionString"]));
+            }
+        }
     }
 }

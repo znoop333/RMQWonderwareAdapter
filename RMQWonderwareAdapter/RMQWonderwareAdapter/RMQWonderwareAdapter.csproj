@@ -110,6 +110,12 @@
     <Compile Include="FormWriteTag.Designer.cs">
       <DependentUpon>FormWriteTag.cs</DependentUpon>
     </Compile>
+    <Compile Include="MyDbLib.cs" />
+    <Compile Include="OmmcMesDataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>OmmcMesDataSet.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RMQManager.cs" />
@@ -135,6 +141,17 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="DJMobis.snk" />
+    <None Include="OmmcMesDataSet.xsc">
+      <DependentUpon>OmmcMesDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="OmmcMesDataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>OmmcMesDataSet.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="OmmcMesDataSet.xss">
+      <DependentUpon>OmmcMesDataSet.xsd</DependentUpon>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

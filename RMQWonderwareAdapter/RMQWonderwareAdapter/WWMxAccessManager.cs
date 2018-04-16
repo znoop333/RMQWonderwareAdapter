@@ -11,9 +11,25 @@ namespace RMQWonderwareAdapter
     /// <summary>
     /// stores handle and other information for a given PLC tag (scalar value)
     /// </summary>
+    /// <remarks>
+    /// To identify a tag, Maintenance uses IP and TagName, but Wonderware uses ItemName
+    /// </remarks>
     public class WWMxItem
     {
+        /// <summary>
+        /// PLC IP address
+        /// </summary>
+        public String PLC_IP { get; set; }
+        /// <summary>
+        /// Used by PLC
+        /// </summary>
+        public String TagName { get; set; }
+        /// <summary>
+        /// Used by Wonderware
+        /// </summary>
         public string ItemName { get; set; }
+        public String Description { get; set; }
+
         public Type ItemType { get; set; }
         public object LastValue { get; set; }
         public int LastQuality { get; set; }
@@ -87,9 +103,9 @@ namespace RMQWonderwareAdapter
             WriteCompleted?.Invoke(this, i);
         }
 
-        public bool Subscribe(string strItemName, string CorrelationId)
+        public bool Subscribe(String PLC_IP, String TagName, string strItemName, string CorrelationId, String Description)
         {
-            return Advise(strItemName, false, CorrelationId);
+            return Advise(PLC_IP, TagName, strItemName, false, CorrelationId, Description);
         }
 
         public bool Unsubscribe(string strItemName, string CorrelationId)
@@ -97,9 +113,9 @@ namespace RMQWonderwareAdapter
             return UnAdvise(strItemName, CorrelationId);
         }
 
-        public bool ReadOnce(string strItemName, string CorrelationId)
+        public bool ReadOnce(String PLC_IP, String TagName, string strItemName, string CorrelationId, String Description)
         {
-            return Advise(strItemName, true, CorrelationId);
+            return Advise(PLC_IP, TagName, strItemName, true, CorrelationId, Description);
         }
 
         public WWMxItem GetLastValue(string strItemName, string CorrelationId)
@@ -107,9 +123,9 @@ namespace RMQWonderwareAdapter
             return LookupItem(strItemName);
         }
 
-        public bool Write(string strItemName, object Value, string CorrelationId)
+        public bool Write(String PLC_IP, String TagName, string strItemName, object Value, string CorrelationId, String Description)
         {
-            if(!Advise(strItemName, false, CorrelationId))
+            if(!Advise(PLC_IP, TagName, strItemName, false, CorrelationId, Description))
                 return false;
 
             try
@@ -260,7 +276,7 @@ namespace RMQWonderwareAdapter
             return null;
         }
 
-        private bool AddItem(string strItemName, string CorrelationId)
+        private bool AddItem(String PLC_IP, String TagName, string strItemName, string CorrelationId, String Description)
         {
             // ensure we are Registered first
             if (hLMX == 0)
@@ -281,8 +297,11 @@ namespace RMQWonderwareAdapter
                 if ((LMX_Server != null) && (hLMX != 0))
                 {
                     var hItem = LMX_Server.AddItem(hLMX, strItemName);
+                    i.PLC_IP = PLC_IP;
+                    i.TagName = TagName;
                     i.hItem = hItem;
                     i.ItemName = strItemName;
+                    i.Description = Description;
                     i.OnAdvise = false;
                     i.Added = true;
                     i.CorrelationId = CorrelationId;
@@ -305,13 +324,13 @@ namespace RMQWonderwareAdapter
             return false;
         }
 
-        private bool Advise(string strItemName, bool OnlyOnce, string CorrelationId)
+        private bool Advise(String PLC_IP, String TagName, string strItemName, bool OnlyOnce, string CorrelationId, String Description)
         {
             WWMxItem i = LookupItem(strItemName);
             if (i == null)
             {
                 // Note:  We should AddItem before attempting to Advise it (that's where the hItem comes from)
-                if(!AddItem(strItemName, CorrelationId))
+                if(!AddItem(PLC_IP, TagName, strItemName, CorrelationId, Description))
                 {
                     PostLogMessage("Advise " + strItemName + " failed to AddItem");
                     return false;
